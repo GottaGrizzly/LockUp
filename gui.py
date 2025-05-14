@@ -11,7 +11,13 @@ class MainApp:
         self.root.deiconify()
         self.root.configure(background="#2d2d2d")
         self.root.title("LockUp")
-        self.root.geometry("800x600")
+        window_width = 800
+        window_height = 600
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
         
         self.db = DatabaseManager(master_password=master_password)
         self.crypto = CryptoManager(master_password)
@@ -143,8 +149,8 @@ class MainApp:
         self.tree_frame = ttk.Frame(self.root)
         self.tree_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
         
-        self.tree = ttk.Treeview(self.tree_frame, columns=("Service", "Username", "Password", "Date"), show="headings")
-        for col in ["Service", "Username", "Password", "Date"]:
+        self.tree = ttk.Treeview(self.tree_frame, columns=("Сервис", "Имя", "Пароль", "Дата"), show="headings")
+        for col in ["Сервис", "Имя", "Пароль", "Дата"]:
             self.tree.heading(col, text=col)
             self.tree.column(col, width=150)
         
@@ -325,7 +331,13 @@ class SettingsWindow:
         
         self.window.configure(background=self.main_app.style.lookup(".", "background"))
         self.window.title("Настройки")
-        self.window.geometry("300x260")
+        window_width = 300
+        window_height = 260
+        screen_width = self.window.winfo_screenwidth()
+        screen_height = self.window.winfo_screenheight()
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+        self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
         
         self.theme_var = tk.StringVar(value=self.main_app.current_theme)
         self.create_widgets()
@@ -389,7 +401,13 @@ class EntryWindow:
         self.window = tk.Toplevel(parent)
         self.window.configure(background=self.parent.cget("background"))
         self.window.title("Новая запись")
-        self.window.geometry("400x300")
+        window_width = 400
+        window_height = 300
+        screen_width = self.window.winfo_screenwidth()
+        screen_height = self.window.winfo_screenheight()
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+        self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
         self.style = ttk.Style(self.window)
         
@@ -480,7 +498,13 @@ class EditWindow:
         self.window = tk.Toplevel(parent)
         self.window.configure(background=parent.cget("background"))
         self.window.title("Редактирование записи")
-        self.window.geometry("400x300")
+        window_width = 400
+        window_height = 300
+        screen_width = self.window.winfo_screenwidth()
+        screen_height = self.window.winfo_screenheight()
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+        self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
         
         self.service_var = tk.StringVar(value=service)
         self.username_var = tk.StringVar(value=username)
@@ -575,7 +599,13 @@ class CreatePasswordWindow(tk.Toplevel):
             foreground="#ffffff"
         )
         self.title("Создание мастер-пароля")
-        self.geometry("450x400")
+        window_width = 450
+        window_height = 400
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         self.on_success = on_success_callback
         
         # Главный контейнер
@@ -732,7 +762,13 @@ class InfoWindow(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("О программе")
-        self.geometry("400x250")
+        window_width = 400
+        window_height = 250
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         self.configure(background=parent.cget("background"))
         
         main_frame = ttk.Frame(self)
