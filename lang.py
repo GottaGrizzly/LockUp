@@ -1,0 +1,45 @@
+LANGUAGES = {
+
+"en": {
+    "settings_title": "Settings",
+    "export_button": "Export Data",
+    "import_button": "Import Data",
+    "app_title": "LockUp",
+    "add_button": "Add",
+    "edit_button": "Edit",
+    "delete_button": "Delete",
+    "info_title": "About",
+    "theme_label": "Theme",
+    "settings": "Settings",
+    "language_label": "Language:",
+    "dark_theme": "Dark",
+    "light_theme": "Light",
+    "update_button": "Check for Updates",
+    "service": "Service",
+    "username": "Username",
+    "password": "Password",
+    "date": "Date",
+    "settings_title": "Settings"
+},
+"ru": {
+    "settings_title": "Настройки",
+    "export_button": "Экспорт данных",
+    "import_button": "Импорт данных",
+    "app_title": "LockUp",
+    "add_button": "Добавить",
+    "edit_button": "Редактировать", 
+    "delete_button": "Удалить",
+    "info_title": "О программе",
+    "theme_label": "Тема",
+    "settings": "Настройки",
+    "language_label": "Язык:",
+    "dark_theme": "Тёмная",
+    "light_theme": "Светлая",
+    "update_button": "Проверить обновления",
+    "service": "Сервис",
+    "username": "Логин",
+    "password": "Пароль", 
+    "date": "Дата",
+    "settings_title": "Настройки"
+    }
+}

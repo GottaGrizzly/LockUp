@@ -4,20 +4,20 @@ from tkinter import ttk, messagebox
 from database import DatabaseManager, verify_master_password
 from encryption import CryptoManager
 import webbrowser
+from lang import LANGUAGES
+from packaging import version
+from tkinter import scrolledtext
 
 class MainApp:
     def __init__(self, root, master_password: str):
+        self.current_language = "ru"
+        self.translations = {}
+        self.load_language()
         self.root = root
         self.root.deiconify()
         self.root.configure(background="#2d2d2d")
         self.root.title("LockUp")
-        window_width = 800
-        window_height = 600
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.root.geometry("800x600")
         
         self.db = DatabaseManager(master_password=master_password)
         self.crypto = CryptoManager(master_password)
@@ -31,21 +31,38 @@ class MainApp:
         self.current_version = "1.0.0"
         self.check_for_updates()
 
+    def update_ui_language(self):
+        columns = ["Service", "Username", "Password", "Date"]
+        for col in columns:
+            self.tree.heading(col, text=self.translations[col.lower()])
+
+        self.settings_button.config(text=self.translations["settings"])
+        self.add_btn.config(text=self.translations["add_button"])
+        self.edit_btn.config(text=self.translations["edit_button"])
+        self.delete_btn.config(text=self.translations["delete_button"])
+
+        self.root.title(self.translations["app_title"])
+
+        for child in self.root.winfo_children():
+            if isinstance(child, SettingsWindow):
+                child.update_labels()
+
+    def load_language(self):
+        self.translations = LANGUAGES[self.current_language]
+
     def check_for_updates(self):
         """Проверяет наличие обновлений через удаленный JSON-файл."""
         try:
-            response = requests.get(
-                "https://raw.githubusercontent.com/GottaGrizzly/LockUp/main/version.json",
-                timeout=5
-            )
+            response = requests.get("https://.../version.json", timeout=5)
             data = response.json()
-            
-            if data["latest_version"] > self.current_version:
+        
+        # Корректное сравнение версий
+            if version.parse(data["latest_version"]) > version.parse(self.current_version):
                 self.show_update_dialog(data)
         except requests.exceptions.RequestException:
-            messagebox.showerror("Ошибка", "Не удалось проверить обновления.")
-        except Exception as e:
-            print(f"Ошибка: {e}")
+            messagebox.showerror("Ошибка", self.translations["update_connection_error"])
+        except ValueError as e:
+            messagebox.showerror("Ошибка", f"Некорректный формат версии: {str(e)}")
 
     def show_update_dialog(self, update_data):
         """Показывает диалоговое окно с предложением обновиться."""
@@ -55,6 +72,10 @@ class MainApp:
         )
         if answer:
             webbrowser.open(update_data["download_url"])
+            dialog = tk.Toplevel()
+            text_area = scrolledtext.ScrolledText(dialog, wrap=tk.WORD)
+            text_area.insert(tk.INSERT, update_data["changelog"])
+            text_area.pack()
 
     def setup_styles(self):
         self.style = ttk.Style()
@@ -115,6 +136,18 @@ class MainApp:
                             borderwidth=0,
                             relief="flat",
                             highlightthickness=0)
+        
+        # Стили для Treeview
+        self.style.configure("Treeview",
+                            background="#2d2d2d" if self.current_theme == "dark" else "#f0f0f0",
+                            foreground="#ffffff" if self.current_theme == "dark" else "#000000",
+                            fieldbackground="#2d2d2d" if self.current_theme == "dark" else "#f0f0f0")
+        self.style.configure("Treeview.Item",
+                            background="#3d3d3d" if self.current_theme == "dark" else "#ffffff",
+                            foreground="#ffffff" if self.current_theme == "dark" else "#000000")
+        self.style.map("Treeview",
+                    background=[('selected', '#505050' if self.current_theme == "dark" else '#e0e0e0')],
+                    foreground=[('selected', '#ffffff' if self.current_theme == "dark" else '#000000')])
 
     def create_widgets(self):
         # Заголовок
@@ -149,22 +182,39 @@ class MainApp:
         self.tree_frame = ttk.Frame(self.root)
         self.tree_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
         
-        self.tree = ttk.Treeview(self.tree_frame, columns=("Сервис", "Имя", "Пароль", "Дата"), show="headings")
-        for col in ["Сервис", "Имя", "Пароль", "Дата"]:
-            self.tree.heading(col, text=col)
+        self.tree = ttk.Treeview(self.tree_frame, columns=("Service", "Username", "Password", "Date"), show="headings")
+        columns = ["Service", "Username", "Password", "Date"]
+        for col in columns:
+            self.tree.heading(col, text=self.translations[col.lower()])
             self.tree.column(col, width=150)
+
+        self.root.title(self.translations["app_title"])
+
+        self._refresh_all_windows(self.style.lookup(".", "background"))
         
         self.tree.pack(fill=tk.BOTH, expand=True)
         
         self.controls = ttk.Frame(self.root)
         self.controls.pack(pady=10)
         
-        ttk.Button(self.controls, text="Добавить", command=self.add_entry).pack(side=tk.LEFT, padx=5)
-        ttk.Button(self.controls, text="Редактировать", command=self.edit_entry, width=15).pack(side=tk.LEFT, padx=5)
-        ttk.Button(self.controls, text="Удалить", command=self.delete_entry).pack(side=tk.LEFT, padx=5)
+        self.add_btn = ttk.Button(self.controls, command=self.add_entry)
+        self.add_btn.pack(side=tk.LEFT, padx=5)
+
+        self.edit_btn = ttk.Button(self.controls, command=self.edit_entry, width=15)
+        self.edit_btn.pack(side=tk.LEFT, padx=5)
+
+        self.delete_btn = ttk.Button(self.controls, command=self.delete_entry)
+        self.delete_btn.pack(side=tk.LEFT, padx=5)
+
+        self.settings_button.config(text=self.translations["settings"])
+        self.add_btn.config(text=self.translations["add_button"])
+        self.edit_btn.config(text=self.translations["edit_button"])
+        self.delete_btn.config(text=self.translations["delete_button"])
+
+        self.update_ui_language()
 
     def open_info(self):
-        InfoWindow(self.root)
+        InfoWindow(self.root, self.translations)
 
     def load_data(self):
         for item in self.tree.get_children():
@@ -174,7 +224,11 @@ class MainApp:
         for row in records:
             self.tree.insert("", tk.END, 
                         values=(row[1], row[2], "•"*12, row[4]),
-                        tags=(row[0],))
+                        tags=('item', row[0]))
+            
+            self.tree.tag_configure('item', 
+                                    foreground=self.style.lookup("Treeview", "foreground"),
+                                    background=self.style.lookup("Treeview", "background"))
 
     def open_settings(self):
         SettingsWindow(self.root, self)
@@ -224,6 +278,22 @@ class MainApp:
                             fieldbackground=field_bg,
                             foreground=fg_color)
         self.root.update()
+
+        # Обновление стилей Treeview
+        self.style.configure("Treeview",
+                            background=bg_color,
+                            foreground=fg_color,
+                            fieldbackground=bg_color)
+        self.style.configure("Treeview.Item",
+                            background=field_bg,
+                            foreground=fg_color)
+        self.style.map("Treeview",
+                    background=[('selected', '#505050' if theme == "dark" else '#d0d0d0')],
+                    foreground=[('selected', '#ffffff' if theme == "dark" else '#000000')])
+        
+        # Принудительное обновление Treeview
+        self.tree.configure(style="Treeview")
+        self.load_data()
 
     def _refresh_all_windows(self, bg_color):
         for child in self.root.winfo_children():
@@ -331,13 +401,7 @@ class SettingsWindow:
         
         self.window.configure(background=self.main_app.style.lookup(".", "background"))
         self.window.title("Настройки")
-        window_width = 300
-        window_height = 260
-        screen_width = self.window.winfo_screenwidth()
-        screen_height = self.window.winfo_screenheight()
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-        self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.window.geometry("300x300")
         
         self.theme_var = tk.StringVar(value=self.main_app.current_theme)
         self.create_widgets()
@@ -352,10 +416,10 @@ class SettingsWindow:
         main_frame.pack(padx=20, pady=20, fill=tk.BOTH, expand=True)
         
         # Выбор темы
-        ttk.Label(main_frame, text="Тема оформления:").pack(anchor=tk.W)
+        ttk.Label(main_frame, text=self.main_app.translations["theme_label"]).pack(anchor=tk.W)
         ttk.Radiobutton(
             main_frame, 
-            text="Тёмная", 
+            text=self.main_app.translations["dark_theme"], 
             variable=self.theme_var, 
             value="dark",
              style="TRadiobutton",
@@ -364,7 +428,7 @@ class SettingsWindow:
         
         ttk.Radiobutton(
             main_frame, 
-            text="Светлая", 
+            text=self.main_app.translations["light_theme"], 
             variable=self.theme_var, 
             value="light", 
             command=lambda: self.main_app.change_theme("light")
@@ -372,16 +436,43 @@ class SettingsWindow:
         
         # Экспорт/Импорт
         ttk.Separator(main_frame).pack(fill=tk.X, pady=10)
-        ttk.Button(main_frame, text="Экспорт данных", command=self.export_data, width=20).pack(pady=5, fill=tk.X)
-        ttk.Button(main_frame, text="Импорт данных", command=self.import_data, width=20).pack(pady=5, fill=tk.X)
+        ttk.Button(main_frame, text=self.main_app.translations["export_button"], command=self.export_data, width=20).pack(pady=5, fill=tk.X)
+        ttk.Button(main_frame, text=self.main_app.translations["import_button"], command=self.import_data, width=20).pack(pady=5, fill=tk.X)
 
         ttk.Separator(main_frame).pack(fill=tk.X, pady=10)
         ttk.Button(
             main_frame, 
-            text="Проверить обновления", 
+            text=self.main_app.translations["update_button"], 
             command=lambda: self.main_app.check_for_updates(),  # Вызов метода из MainApp
             width=20
         ).pack(pady=5, fill=tk.X)
+
+        ttk.Label(main_frame, text=self.main_app.translations["language_label"]).pack(anchor=tk.W)
+        
+        self.lang_var = tk.StringVar(value=self.main_app.current_language)
+        lang_combo = ttk.Combobox(
+            main_frame,
+            textvariable=self.lang_var,
+            values=["ru", "en"],
+            state="readonly",
+            width=15
+        )
+        lang_combo.pack(anchor=tk.W)
+        lang_combo.bind("<<ComboboxSelected>>", self.change_language)
+
+    def change_language(self, event):
+        new_lang = self.lang_var.get()
+        self.main_app.current_language = new_lang
+        self.main_app.load_language()
+        self.main_app.update_ui_language()
+
+    def update_labels(self):
+        self.window.title(self.main_app.translations["settings_title"])
+
+        for widget in self.window.winfo_children():
+            if isinstance(widget, ttk.Label):
+                if widget.cget("text") == self.main_app.translations["theme_label"]:
+                    widget.config(text=self.main_app.translations["theme_label"])
 
     def export_data(self):
         # Реализация экспорта
@@ -401,13 +492,7 @@ class EntryWindow:
         self.window = tk.Toplevel(parent)
         self.window.configure(background=self.parent.cget("background"))
         self.window.title("Новая запись")
-        window_width = 400
-        window_height = 300
-        screen_width = self.window.winfo_screenwidth()
-        screen_height = self.window.winfo_screenheight()
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-        self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.window.geometry("400x300")
 
         self.style = ttk.Style(self.window)
         
@@ -498,13 +583,7 @@ class EditWindow:
         self.window = tk.Toplevel(parent)
         self.window.configure(background=parent.cget("background"))
         self.window.title("Редактирование записи")
-        window_width = 400
-        window_height = 300
-        screen_width = self.window.winfo_screenwidth()
-        screen_height = self.window.winfo_screenheight()
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-        self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.window.geometry("400x300")
         
         self.service_var = tk.StringVar(value=service)
         self.username_var = tk.StringVar(value=username)
@@ -599,13 +678,7 @@ class CreatePasswordWindow(tk.Toplevel):
             foreground="#ffffff"
         )
         self.title("Создание мастер-пароля")
-        window_width = 450
-        window_height = 400
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.geometry("450x400")
         self.on_success = on_success_callback
         
         # Главный контейнер
@@ -759,16 +832,11 @@ class AuthWindow(tk.Toplevel):
         self.parent.destroy()
 
 class InfoWindow(tk.Toplevel):
-    def __init__(self, parent):
+    def __init__(self, parent, translations):
         super().__init__(parent)
+        self.title(translations["info_title"])
         self.title("О программе")
-        window_width = 400
-        window_height = 250
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.geometry("400x250")
         self.configure(background=parent.cget("background"))
         
         main_frame = ttk.Frame(self)
