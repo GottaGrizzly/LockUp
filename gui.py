@@ -8,6 +8,14 @@ from lang import LANGUAGES
 from packaging import version
 from tkinter import scrolledtext
 
+def center_window(window):
+    window.update_idletasks()
+    width = window.winfo_width()
+    height = window.winfo_height()
+    x = (window.winfo_screenwidth() // 2) - (width // 2)
+    y = (window.winfo_screenheight() // 2) - (height // 2)
+    window.geometry(f'+{x}+{y}')
+
 class MainApp:
     def __init__(self, root, master_password: str):
         self.current_language = "ru"
@@ -18,6 +26,7 @@ class MainApp:
         self.root.configure(background="#2d2d2d")
         self.root.title("LockUp")
         self.root.geometry("800x600")
+        center_window(self.root)
         
         self.db = DatabaseManager(master_password=master_password)
         self.crypto = CryptoManager(master_password)
@@ -53,7 +62,7 @@ class MainApp:
     def check_for_updates(self):
         """Проверяет наличие обновлений через удаленный JSON-файл."""
         try:
-            response = requests.get("https://.../version.json", timeout=5)
+            response = requests.get("https://github.com/GottaGrizzly/LockUp/blob/main/version.json", timeout=5)
             data = response.json()
         
         # Корректное сравнение версий
@@ -402,6 +411,7 @@ class SettingsWindow:
         self.window.configure(background=self.main_app.style.lookup(".", "background"))
         self.window.title("Настройки")
         self.window.geometry("300x300")
+        center_window(self.window)
         
         self.theme_var = tk.StringVar(value=self.main_app.current_theme)
         self.create_widgets()
@@ -493,6 +503,7 @@ class EntryWindow:
         self.window.configure(background=self.parent.cget("background"))
         self.window.title("Новая запись")
         self.window.geometry("400x300")
+        center_window(self.window)
 
         self.style = ttk.Style(self.window)
         
@@ -584,6 +595,7 @@ class EditWindow:
         self.window.configure(background=parent.cget("background"))
         self.window.title("Редактирование записи")
         self.window.geometry("400x300")
+        center_window(self.window)
         
         self.service_var = tk.StringVar(value=service)
         self.username_var = tk.StringVar(value=username)
@@ -679,6 +691,7 @@ class CreatePasswordWindow(tk.Toplevel):
         )
         self.title("Создание мастер-пароля")
         self.geometry("450x400")
+        center_window(self)
         self.on_success = on_success_callback
         
         # Главный контейнер
@@ -726,6 +739,7 @@ class AuthWindow(tk.Toplevel):
         # Настройка стилей
         self.title("LockUp - Вход")
         self.geometry("450x400")
+        center_window(self)
 
         # Стиль кнопки "Войти" как в основном интерфейсе
         self.style.configure("Auth.TButton", 
@@ -807,14 +821,6 @@ class AuthWindow(tk.Toplevel):
         self.center_window()
         self.password_entry.focus_force()
 
-    def center_window(self):
-        self.update_idletasks()
-        width = 450  
-        height = 460
-        x = (self.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.winfo_screenheight() // 2) - (height // 2)
-        self.geometry(f"{width}x{height}+{x}+{y}")
-
     def authenticate(self):
         password = self.password_var.get().strip()
         if not password:
@@ -837,6 +843,7 @@ class InfoWindow(tk.Toplevel):
         self.title(translations["info_title"])
         self.title("О программе")
         self.geometry("400x250")
+        center_window(self)
         self.configure(background=parent.cget("background"))
         
         main_frame = ttk.Frame(self)
