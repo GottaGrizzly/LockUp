@@ -738,7 +738,7 @@ class AuthWindow(tk.Toplevel):
 
         # Настройка стилей
         self.title("LockUp - Вход")
-        self.geometry("450x400")
+        self.geometry("450x450")
         center_window(self)
 
         # Стиль кнопки "Войти" как в основном интерфейсе
@@ -818,7 +818,6 @@ class AuthWindow(tk.Toplevel):
         self.password_entry.bind('<Return>', lambda e: self.authenticate())
 
         # Центрирование и фокус
-        self.center_window()
         self.password_entry.focus_force()
 
     def authenticate(self):
@@ -870,9 +869,3 @@ class InfoWindow(tk.Toplevel):
             style="TButton"
         )
         self.github_btn.pack(pady=10)
-        
-        ttk.Button(
-            main_frame,
-            text="Закрыть",
-            command=self.destroy
-        ).pack(pady=10)
