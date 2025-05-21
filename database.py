@@ -138,26 +138,44 @@ class DatabaseManager:
         encrypted_pass = self.crypto.encrypt(password)
         query = """INSERT INTO passwords (service, username, password, last_updated)
                    VALUES (?, ?, ?, datetime('now'))"""
-        self.conn.execute(query, (service, username, encrypted_pass))
+        cursor = self.conn.cursor()
+        cursor.execute(query, (service, username, encrypted_pass))
         self.conn.commit()
+        return cursor.lastrowid
 
     def get_all_passwords(self):
         cursor = self.conn.execute("SELECT id, service, username, password, last_updated FROM passwords")
         return cursor.fetchall()
     
     def update_password(self, record_id, service, username, password):
-        encrypted_pass = self.crypto.encrypt(password)
-        query = """UPDATE passwords 
-                   SET service = ?, username = ?, password = ?, last_updated = datetime('now') 
-                   WHERE id = ?"""
-        self.conn.execute(query, (service, username, encrypted_pass, record_id))
-        self.conn.commit()
+        try:
+            encrypted_pass = self.crypto.encrypt(password)  # Шифрование
+            query = """UPDATE passwords 
+                    SET service = ?, 
+                        username = ?, 
+                        password = ?, 
+                        last_updated = datetime('now') 
+                    WHERE id = ?"""
+            cursor = self.conn.cursor()
+            cursor.execute(query, (service, username, encrypted_pass, record_id))
+            self.conn.commit()  # Фиксация изменений
+        except sqlite3.Error as e:
+            print(f"[DEBUG] SQL Error: {e}")
+            raise Exception(f"Ошибка обновления: {str(e)}")
+        
 
     def get_password_by_id(self, record_id):
-        cursor = self.conn.execute("SELECT * FROM passwords WHERE id = ?", (record_id,))
+        cursor = self.conn.execute(
+            "SELECT id, service, username, password, last_updated FROM passwords WHERE id = ?", 
+            (record_id,)
+        )
         return cursor.fetchone()
         
+        
     def delete_password(self, record_id):
-        self.conn.execute("DELETE FROM passwords WHERE id = ?", (record_id,))
-        self.conn.commit()
+        try:
+            self.conn.execute("DELETE FROM passwords WHERE id = ?", (record_id,))
+            self.conn.commit()  
+        except sqlite3.Error as e:
+            raise Exception(f"Ошибка базы данных: {str(e)}")
         

@@ -23,6 +23,7 @@ LANGUAGES = {
 },
 "ru": {
     "settings_title": "Настройки",
+    "update_connection_error": "Ошибка подключения при проверке обновлений",
     "export_button": "Экспорт данных",
     "import_button": "Импорт данных",
     "app_title": "LockUp",

@@ -7,6 +7,7 @@ import webbrowser
 from lang import LANGUAGES
 from packaging import version
 from tkinter import scrolledtext
+import traceback
 
 def center_window(window):
     window.update_idletasks()
@@ -62,7 +63,7 @@ class MainApp:
     def check_for_updates(self):
         """Проверяет наличие обновлений через удаленный JSON-файл."""
         try:
-            response = requests.get("https://github.com/GottaGrizzly/LockUp/blob/main/version.json", timeout=5)
+            response = requests.get("https://raw.githubusercontent.com/GottaGrizzly/LockUp/main/version.json", timeout=5)
             data = response.json()
         
         # Корректное сравнение версий
@@ -233,7 +234,7 @@ class MainApp:
         for row in records:
             self.tree.insert("", tk.END, 
                         values=(row[1], row[2], "•"*12, row[4]),
-                        tags=('item', row[0]))
+                        tags=(row[0],))
             
             self.tree.tag_configure('item', 
                                     foreground=self.style.lookup("Treeview", "foreground"),
@@ -360,7 +361,7 @@ class MainApp:
         try:
             # Получаем ID из первого столбца таблицы
             item = self.tree.item(selected[0])
-            record_id = item['tags'][0]
+            record_id = int(item['tags'][0])
             
             record = self.db.get_password_by_id(record_id)
             if not record:
@@ -390,7 +391,7 @@ class MainApp:
             try:
                 # Получаем ID из тегов
                 item = self.tree.item(selected[0])
-                record_id = item['tags'][0]
+                record_id = int(item['tags'][0])
                 self.db.delete_password(record_id)
                 self.load_data()
             except Exception as e:
@@ -577,8 +578,8 @@ class EntryWindow:
             return
         
         try:
-            self.db.add_password(service, username, password)
-            self.refresh()
+            record_id = self.db.add_password(service, username, password)
+            self.refresh()  
             self.window.destroy()
         except Exception as e:
             messagebox.showerror("Ошибка базы данных", str(e))
